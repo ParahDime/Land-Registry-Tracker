@@ -60,5 +60,6 @@ def assess_nulls(df: pd.DataFrame, nullable: set[str] = LAND_REGISTRY_NULLABLE) 
         "category": ["expected" if c in nullable else "unexpected" for c in counts.index],
     }).sort_values("category")
 
+#handle null values that need to be addressed
 def handle_nulls():
     print("garmin")
