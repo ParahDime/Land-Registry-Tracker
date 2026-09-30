@@ -41,20 +41,26 @@ def generate_report():
 #take dataset and place it into an sql file
 def push_to_SQL(df: pd.DataFrame) -> None:
     #open/create sql file, name of file
-    engine = sqlite3.connect("land_registry.db")
-    df.to_sql("transactions", engine, if_exists="replace", index=False)
-    engine.close()
-    print("Data successfully loaded into SQL.")
+    try:
+        with sqlite3.connect(DB_FILE) as engine:
+            df.to_sql("transactions", engine, if_exists="replace", index=False)
+        print("Data successfully loaded into SQL.")
+    except sqlite3.Error as e:
+        print(f"Database error occurred: {e}")
+    except PermissionError:
+        print(f"Permission denied: Could not write to '{DB_FILE}'. Is the database open in another program?")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
     #convert into an sql file
 
     #close the sql file
 
     #try catch when using
-    print("Hello")
+    test_foo()
     return
 
 def test_foo():
-    print("Success")
+    print("Function called")
 
 #create a report
 def analytics(fileName, df):
