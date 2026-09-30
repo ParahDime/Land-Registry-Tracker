@@ -4,10 +4,12 @@ import sqlite3
 import datetime
 from pathlib import Path
 
+DB_FILE = "land_registry.db"
+
 def main():
     fileName = openingSequence()
     #get file name
-
+    print(fileName)
     #read in the file name
     df_raw = load_data("raw/" + fileName)  #file to be read
     df_raw.head()
@@ -30,9 +32,8 @@ def main():
     #move the data into an SQL file
     push_to_SQL(df)
 
-    analytics()
 
-    #the fun part (data analytics)
+    analytics(fileName, df)
 
 def generate_report():
     print("test")
@@ -50,12 +51,13 @@ def push_to_SQL(df: pd.DataFrame) -> None:
 
     #try catch when using
     print("Hello")
+    return
 
 def test_foo():
     print("Success")
 
 #create a report
-def analytics(fileName):
+def analytics(fileName, df):
     print("Analytics")
 
     path = Path(fileName)
@@ -104,13 +106,13 @@ def openingSequence():
         choice = input("Select option (m/y/a): ").strip().lower()
             
         if choice == 'a':
-            return {"type": "all", "filename": "pp-complete.csv"}
+            return "pp-complete.csv"
             
         # Specific Year: Gets last 2 digits of the year
         elif choice == 'y':
             year_input = input("Enter year (last 2 digits, e.g., 23): ").strip()
             if year_input.isdigit() and len(year_input) <= 2:
-                return {"type": "year", "filename": f"pp-{year_input.zfill(2)}.csv"}
+                return f"pp-{year_input.zfill(2)}.csv"
             print("Invalid year. Please enter a 2-digit number.")
             
         # Recent Monthly Release: Asks for month name ('july') and year (last 2 digits)
@@ -121,7 +123,7 @@ def openingSequence():
             if len(month_input) >= 3:
                 month_abbr = month_input[:3]
                 year_val = year_input if (year_input.isdigit() and len(year_input) <= 2) else "26"
-                return {"type": "month", "filename": f"pp-{month_abbr}{year_val}.csv"}
+                return f"pp-{month_abbr}{year_val}.csv"
             print("Invalid input.")
             
         else:
