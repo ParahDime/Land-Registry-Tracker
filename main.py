@@ -51,11 +51,7 @@ def push_to_SQL(df: pd.DataFrame) -> None:
         print(f"Permission denied: Could not write to '{DB_FILE}'. Is the database open in another program?")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-    #convert into an sql file
 
-    #close the sql file
-
-    #try catch when using
     test_foo()
     return
 
@@ -76,24 +72,7 @@ def analytics(fileName, df):
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("hello world" + "\n")
-    #get metrics
-    #transaction numbers per X
-    #dates used within hte analytics
-    #total market value of sales
-
-    #value per properties averages
-    #average prices
-    #mode value
-
-    #min values (plus data
-    #max value
-    #IQR and percentiles
-    #no outside standard dist
-    #trans per property type (+ stats)
-    #freehold vs leasehold
-    #new build vs established
-    #get a year
-    #cat a vs cat b sales
+   
 
 
 #used to handle and initialise the data
