@@ -46,24 +46,69 @@ def sql_get_dates(engine) -> tuple[str, str]:
 
     return start_str, end_str
 
-def sql_total_market_sales():
+def sql_total_market_sales(engine):
     #total market value of sales
-    print("hello world")
+    query = "SELECT SUM(price) FROM transactions"
+    
+    cursor = engine.cursor()
+    cursor.execute(query)
+    total_sales = cursor.fetchone()[0]
+    
+    #return 0 if error / not available
+    return total_sales if total_sales is not None else 0.0
 
-def sql_average_property_price():
-    #value per properties averages
-    print("hello world")
+def sql_total_sales_county(engine) -> list[tuple]:
+    """Queries total sales and transaction count grouped by county."""
+    query = """
+        SELECT 
+            county,
+            COUNT(*) AS transaction_count,
+            SUM(price) AS total_sales
+        FROM transactions
+        WHERE county IS NOT NULL AND county != ''
+        GROUP BY county
+        ORDER BY total_sales DESC;
+    """
+    cursor = engine.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
 
-def sql_average_price_per_property_type():
+def sql_average_property_price(engine) -> list[tuple]:
+    #value per properties averages per county
+    query = """
+        SELECT 
+            county,
+            AVG(price) AS average_price
+        FROM transactions
+        WHERE county IS NOT NULL AND county != ''
+        GROUP BY county
+        ORDER BY average_price DESC;
+    """
+    cursor = engine.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
+
+def sql_average_price_per_property_type(engine) -> list[tuple]:
     #average prices
-    print("hello world")
-
-def sql_mode_property_price():
-    #mode value
-    print("hello world")
-
-def sql_mode_price_per_property():
-    print("hello world")
+    query = """
+        SELECT 
+            county,
+            CASE property_type
+                WHEN 'F' THEN 'Flat'
+                WHEN 'T' THEN 'Terraced'
+                WHEN 'S' THEN 'Semi-Detached'
+                WHEN 'D' THEN 'Detached'
+                ELSE 'Other'
+            END AS property_name,
+            AVG(price) AS average_price
+        FROM transactions
+        WHERE county IS NOT NULL AND county != ''
+        GROUP BY county, property_type
+        ORDER BY county, average_price DESC;
+    """
+    cursor = engine.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
 
 def sql_min_price_per_property_type():
     #min values (plus data

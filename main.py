@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 from data_utils import load_data, sanitise, report_missing, assess_nulls
-from sql_utils import sql_average_price_per_property_type, sql_get_dates, sql_average_property_price, sql_get_established, sql_get_freehold_property, sql_get_leasehold_property, sql_get_lower_percentile, sql_get_max_property_price, sql_get_newbuild, sql_get_special_trans, sql_get_standard_trans, sql_get_upper_percentile, sql_max_price_per_property_type, sql_min_price_per_property_type, sql_mode_price_per_property, sql_mode_property_price, sql_num_per_X, sql_total_market_sales, sql_total_sales
+from sql_utils import sql_average_price_per_property_type, sql_get_dates, sql_total_sales_county, sql_average_property_price, sql_get_established, sql_get_freehold_property, sql_get_leasehold_property, sql_get_lower_percentile, sql_get_max_property_price, sql_get_newbuild, sql_get_special_trans, sql_get_standard_trans, sql_get_upper_percentile, sql_max_price_per_property_type, sql_min_price_per_property_type, sql_mode_price_per_property, sql_mode_property_price, sql_num_per_X, sql_total_market_sales, sql_total_sales
 
 #name definitions for paths
 DB_FOLDER = Path("databases")
@@ -94,7 +94,7 @@ def analytics(filePath, sql_db):
         f.write("Time:" + report_timestamp + "\n")
 
         with sqlite3.connect(DB_FILE) as engine:      
-            f.write("Number of transations : " + str(sql_total_sales(engine)))
+            f.write("Number of transations: " + str(sql_total_sales(engine)))
             start, end = sql_get_dates(engine)
             f.write("Start of dataset: {str(start)}\n")
             f.write("End date of dataset: {str(end)} \n\n")
@@ -102,7 +102,27 @@ def analytics(filePath, sql_db):
             f.write("Property transactions by type: \n")
             property_breakdown = sql_num_per_X(engine)
             for property_name, count in property_breakdown:
-                f.write(f"{property_name}: {count} transactions \n")
+                f.write(f"{property_name}: {count} transactions \n\n")
+
+            f.write("Total price of houses sold: £" + str(sql_total_market_sales(engine)))
+            price_breakdown = sql_total_sales_county(engine)
+            for county, count, total_sales in price_breakdown:
+                f.write(f"{county}: {count:,} sales,  Total: £{total_sales:,.2f}\n")
+            f.write("\n\n")
+
+            f.write("Average property prices: \n\n")
+            avg_data = sql_average_property_price(engine)
+            for county, avg_price in avg_data:
+                f.write(f"{county}: Average Price £{avg_price:,.2f}\n")
+
+            avg_prop_type = sql_average_price_per_property_type(engine)
+            current_county = None
+            for county, property_name, avg_price in avg_prop_type:
+                if county != current_county:
+                    current_county = county
+                    f.write(f"\n{current_county}:\n\n")
+                f.write(f"  - {property_name}: £{avg_price:,.2f}\n")
+
             #trans number per X
 
    
