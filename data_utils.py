@@ -5,7 +5,8 @@ from pathlib import Path
 def load_data(path: str) -> pd.DataFrame:
     """Load csv, xlsx, or json into a DataFrame based on file extension."""
     ext = Path(path).suffix.lower()
- 
+
+    #error handle if not found
     if ext == ".csv":
         return pd.read_csv(path)
     elif ext in (".xlsx", ".xls"):

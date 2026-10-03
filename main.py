@@ -67,11 +67,14 @@ def test_foo():
 
 #create a report
 def analytics(filePath, sql_db):
+    REPORT_FOLDER = Path("reports")
+    REPORT_FOLDER.mkdir(parents=True, exist_ok=True)
     print("Analytics report")
 
     #name file to debug
-    path = Path(filePath + ".txt")
-    stem, suffix = path.stem, path.suffix
+    stem = filePath  # e.g., "pp-Jul26"
+    suffix = ".txt"
+    path = REPORT_FOLDER / f"{stem}{suffix}"
     counter = 1
 
     print("Creating file...")
@@ -81,20 +84,27 @@ def analytics(filePath, sql_db):
 
     now = datetime.now()
     report_datestamp = now.strftime("%Y-%m-%d")
-    report_timestamp = now.strftime("%H:%M:%S")
+    report_timestamp = now.strftime("%H:%M:%S")  
 
     print("Processing...")
     with open(path, "w", encoding="utf-8") as f:
         f.write("Analytics Report" + "\n\n")
+        f.write("Dataset used: " + filePath + ".csv\n\n")
         f.write("Date: " + report_datestamp + "\n")
         f.write("Time:" + report_timestamp + "\n")
+
         with sqlite3.connect(DB_FILE) as engine:      
             f.write("Number of transations : " + str(sql_total_sales(engine)))
             start, end = sql_get_dates(engine)
-            f.write("Start of dataset: ", start)
-            f.write("End date of dataset: ", end)
+            f.write("Start of dataset: {str(start)}\n")
+            f.write("End date of dataset: {str(end)} \n\n")
 
-        f.write("Dataset used: " + filePath + ".csv\n\n")
+            f.write("Property transactions by type: \n")
+            property_breakdown = sql_num_per_X(engine)
+            for property_name, count in property_breakdown:
+                f.write(f"{property_name}: {count} transactions \n")
+            #trans number per X
+
    
     print("File creation complete. Exiting...")
     return

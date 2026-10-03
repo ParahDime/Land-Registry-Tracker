@@ -8,15 +8,32 @@ def sql_total_sales(engine):
     return int(count)
 
  #get metrics
-def sql_num_per_X():
+def sql_num_per_X(engine) -> list[tuple]:
     #transaction numbers per X
-    print("hello world")
+    #f d s t o
+    query = """
+        SELECT 
+            CASE property_type
+                WHEN 'F' THEN 'Flat'
+                WHEN 'T' THEN 'Terraced'
+                WHEN 'S' THEN 'Semi-Detached'
+                WHEN 'D' THEN 'Detached'
+                ELSE 'Other'
+            END AS property_name,
+            COUNT(*) AS transaction_count
+        FROM transactions
+        GROUP BY property_type
+        ORDER BY transaction_count DESC;
+    """
+    cursor = engine.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
 
 def sql_get_dates(engine) -> tuple[str, str]:
     query = """
         SELECT 
-            MIN(date) AS start_date, 
-            MAX(date) AS end_date 
+            MIN(date_of_transfer) AS start_date, 
+            MAX(date_of_transfer) AS end_date 
         FROM transactions
     """
     cursor = engine.cursor()
