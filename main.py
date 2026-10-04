@@ -65,6 +65,7 @@ def push_to_SQL(df: pd.DataFrame) -> None:
 def test_foo():
     print("Function called")
 
+# CLEAN UP ANALYTICS, TOTAL, COUNTRY, COUNTY AMOUNTS
 #create a report
 def analytics(filePath, sql_db):
     REPORT_FOLDER = Path("reports")
