@@ -106,6 +106,17 @@ def analytics(filePath, sql_db):
                 f.write(f"{property_name}: {count} transactions \n\n")
 
             f.write("Total price of houses sold: £" + str(sql_total_market_sales(engine)))
+            #get newbuild
+            f.write("Total number of new build house sales: " + str(sql_get_newbuild(engine)))
+            #get established
+            f.write("Total number of established sales: " + str(sql_get_established(engine)))
+            #standard sales
+            f.write("Number of category A sales (Regular house purchases): " + str(sql_get_standard_trans(engine)))
+            #repos and other
+            f.write("Number of category B sales (land sales, reposessions, etc): " + str(sql_get_special_trans(engine)))
+
+
+
             price_breakdown = sql_total_sales_county(engine)
             for county, count, total_sales in price_breakdown:
                 f.write(f"{county}: {count:,} sales,  Total: £{total_sales:,.2f}\n")
@@ -124,8 +135,25 @@ def analytics(filePath, sql_db):
                     f.write(f"\n{current_county}:\n\n")
                 f.write(f"  - {property_name}: £{avg_price:,.2f}\n")
 
-            #trans number per X
-
+            #min price per property #COUNTY
+            f.write("Minimum price: \n\n")
+            min_price_county = sql_min_price_per_property_type(engine)
+            #max price per property type #COUNTY
+            f.write("Maximum price: \n\n")
+            max_price_county = sql_max_price_per_property_type(engine)
+            #upper percentile #COUNTY
+            f.write("Upper percentile")
+            up_percent = sql_get_upper_percentile(engine)
+            #lower percentile #COUNTY
+            f.write("Lower percentile")
+            low_percent = sql_get_lower_percentile(engine)
+            #get leasehold property #COUNTY
+            f.write("Total number of leasehold properties sold: ")
+            leasehold = sql_get_leasehold_property(engine)
+            #get freehold property #COUNTY
+            f.write("Total number of freehold properties sold: ")
+            freehold = sql_get_freehold_property(engine)
+            
    
     print("File creation complete. Exiting...")
     return

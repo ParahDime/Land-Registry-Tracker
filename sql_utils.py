@@ -268,6 +268,7 @@ def sql_get_newbuild(engine) -> int:
     result = cursor.fetchone()
     return result[0] if result else 0
 
+# COUNTRY
 def sql_get_established(engine) -> int:
         query = """
             SELECT COUNT(*) 
@@ -279,6 +280,7 @@ def sql_get_established(engine) -> int:
         result = cursor.fetchone()
         return result[0] if result else 0
 
+#COUNTRY
 #cat a vs cat b sales
 def sql_get_standard_trans(engine) -> int: #standard property purchase
     query = """
