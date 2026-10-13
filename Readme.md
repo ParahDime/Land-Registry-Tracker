@@ -19,6 +19,8 @@ THe program than handles the analytics. THis is done by opening a file, checking
 Each option is inputted into a file, obtaining the data with SQL functions. 
 The program then terminates.
 
+Data in the report is listed per county.
+
 
 ### Languages and frameworks
 The program runs on python and its packages, as listed in main.py

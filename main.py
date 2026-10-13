@@ -44,9 +44,6 @@ def main():
     analytics(filePath, sql_db)
     return
 
-def generate_report():
-    print("test")
-
 #take dataset and place it into an sql file
 def push_to_SQL(df: pd.DataFrame) -> None:
     #open/create sql file, name of file
@@ -63,10 +60,6 @@ def push_to_SQL(df: pd.DataFrame) -> None:
 
     return str(DB_FILE)
 
-def test_foo():
-    print("Function called")
-
-# CLEAN UP ANALYTICS, TOTAL, COUNTRY, COUNTY AMOUNTS
 #create a report
 def analytics(filePath, sql_db):
     #enter where the reports go
@@ -75,7 +68,7 @@ def analytics(filePath, sql_db):
     print("Analytics report")
 
     #name file to debug
-    stem = filePath  # e.g., "pp-Jul26"
+    stem = filePath 
     suffix = ".txt"
     path = REPORT_FOLDER / f"{stem}{suffix}"
     counter = 1
@@ -91,7 +84,7 @@ def analytics(filePath, sql_db):
     print("Processing...")
     with open(path, "w", encoding="utf-8") as f:
         f.write("Analytics Report" + "\n\n")
-        #BASICS in output
+        #BASICS
         f.write("Dataset used: " + filePath + ".csv\n\n")
         f.write(f"Date: {now:%Y-%m-%d} \n")
         f.write(f"Time: {now:%H:%M:%S}\n")
@@ -120,107 +113,66 @@ def analytics(filePath, sql_db):
             f.write("Number of category B sales (land sales, reposessions, etc): " + str(sql_get_special_trans(engine)))
 
             #COUNTY WIDE
-            # county-level lookups: county -> value
-        totals = {c: (n, t) for c, n, t in sql_total_sales_county(engine)}
-        avg = dict(sql_average_property_price(engine))
-        lease = dict(sql_get_leasehold_property(engine))
-        free = dict(sql_get_freehold_property(engine))
+            #lookup
+            totals = {c: (n, t) for c, n, t in sql_total_sales_county(engine)}
+            avg = dict(sql_average_property_price(engine))
+            lease = dict(sql_get_leasehold_property(engine))
+            free = dict(sql_get_freehold_property(engine))
 
-        # per-type stats: stats[county][property_type][metric] = value
-        stats = defaultdict(lambda: defaultdict(dict))
-        metric_queries = {
-            "avg": sql_average_price_per_property_type,
-            "min": sql_min_price_per_property_type,
-            "max": sql_max_price_per_property_type,
-            "lower": sql_get_lower_percentile,
-            "upper": sql_get_upper_percentile,
-        }
-        for metric, query_fn in metric_queries.items():
-            for county, ptype, value in query_fn(engine):
-                stats[county][ptype][metric] = value
+            #Get statistics per county
+            stats = defaultdict(lambda: defaultdict(dict))
+            metric_queries = {
+                "avg": sql_average_price_per_property_type,
+                "min": sql_min_price_per_property_type,
+                "max": sql_max_price_per_property_type,
+                "lower": sql_get_lower_percentile,
+                "upper": sql_get_upper_percentile,
+            }
+            for metric, query_fn in metric_queries.items():
+                for county, ptype, value in query_fn(engine):
+                    stats[county][ptype][metric] = value
 
-        f.write("\n=== COUNTIES ===\n")
-        for county in sorted(totals):  # alphabetical county order
-            count, total = totals[county]
-            f.write(f"\n{county}\n")
-            f.write(f"  Sales: {count:,} | Total: {money(total)} | Average: {money(avg.get(county, 0))}\n")
-            f.write(f"  Leasehold: {lease.get(county, 0):,} | Freehold: {free.get(county, 0):,}\n")
-            f.write("  By property type:\n")
-            for ptype, m in sorted(stats[county].items()):
-                # .get(..., 0) guards against any metric missing for a type
-                f.write(
-                    f"    - {ptype}: avg {money(m.get('avg', 0))} | "
-                    f"min {money(m.get('min', 0))} | max {money(m.get('max', 0))} | "
-                    f"LQ {money(m.get('lower', 0))} | UQ {money(m.get('upper', 0))}\n"
-                )
-
-            """price_breakdown = sql_total_sales_county(engine)
-            for county, count, total_sales in price_breakdown:
-                f.write(f"{county}: {count:,} sales,  Total: £{total_sales:,.2f}\n")
-            f.write("\n\n")
-
-            f.write("Average property prices: \n\n")
-            avg_data = sql_average_property_price(engine)
-            for county, avg_price in avg_data:
-                f.write(f"{county}: Average Price £{avg_price:,.2f}\n")
-
-            avg_prop_type = sql_average_price_per_property_type(engine)
-            current_county = None
-            for county, property_name, avg_price in avg_prop_type:
-                if county != current_county:
-                    current_county = county
-                    f.write(f"\n{current_county}:\n\n")
-                f.write(f"  - {property_name}: £{avg_price:,.2f}\n")
-
-            #min price per property #COUNTY
-            f.write("Minimum price: \n\n")
-            min_price_county = sql_min_price_per_property_type(engine)
-            #max price per property type #COUNTY
-            f.write("Maximum price: \n\n")
-            max_price_county = sql_max_price_per_property_type(engine)
-            #upper percentile #COUNTY
-            f.write("Upper percentile")
-            up_percent = sql_get_upper_percentile(engine)
-            #lower percentile #COUNTY
-            f.write("Lower percentile")
-            low_percent = sql_get_lower_percentile(engine)
-            #get leasehold property #COUNTY
-            f.write("Total number of leasehold properties sold: \n")
-            leasehold = sql_get_leasehold_property(engine)
-            #get freehold property #COUNTY
-            f.write("Total number of freehold properties sold: \n")
-            freehold = sql_get_freehold_property(engine)"""
-            
+            f.write("\n=== COUNTIES ===\n")
+            #output in county alphabetical
+            for county in sorted(totals):
+                count, total = totals[county]
+                f.write(f"\n{county}\n")
+                f.write(f"  Sales: {count:,} | Total: {money(total)} | Average: {money(avg.get(county, 0))}\n")
+                f.write(f"  Leasehold: {lease.get(county, 0):,} | Freehold: {free.get(county, 0):,}\n")
+                f.write("  By property type:\n")
+                for ptype, m in sorted(stats[county].items()):
+                    #Guard conditions used
+                    f.write(
+                        f"    - {ptype}: avg {money(m.get('avg', 0))} | "
+                        f"min {money(m.get('min', 0))} | max {money(m.get('max', 0))} | "
+                        f"LQ {money(m.get('lower', 0))} | UQ {money(m.get('upper', 0))}\n"
+                    )
    
     print("File creation complete. Exiting...")
     return
 
 #used to handle and initialise the data
 def openingSequence():
-    current_year = datetime.now().year
-    
     while True:
         print("\n--- HM Land Registry Data Selection ---")
         print("  [m] Recent monthly release")
         print("  [y] Specific Year")
         print("  [a] All Data (Complete dataset)")
 
-        current_full_year = datetime.now().year
-        current_short_year = current_full_year % 100
-
         choice = input("Select option (m/y/a): ").strip().lower()
-            
+
+        #look for a specific file
         if choice == 'a':
             return "pp-complete"
             
-        # Specific Year: Gets last 2 digits of the year
+        #Get a specific year
         elif choice == 'y':
             year_input = input("Enter year (last 2 digits, e.g., 23): ").strip()
             if year_input.isdigit() and len(year_input) <= 2:
                 return f"pp-{year_input.zfill(2)}"
             print("Invalid year. Please enter a 2-digit number.")
             
-        # Recent Monthly Release: Asks for month name ('july') and year (last 2 digits)
+        #Get month and the year
         elif choice == 'm':
             month_input = input("Enter month (e.g., july): ").strip().capitalize()
             year_input = input("Enter year (last 2 digits, e.g., 23): ").strip()
