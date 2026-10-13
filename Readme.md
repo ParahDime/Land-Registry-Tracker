@@ -3,6 +3,12 @@ Land registry tracker
 A program that takes in a dataset from HM land registry, and outputs both a report, and a database to be used potentially by other software.
 
 ## How to use
+To start:
+Create a folder called datasets. Inside the folder, move a dataset from HM land registry. Links below:
+https://www.gov.uk/government/statistical-data-sets/price-paid-data-single-file
+https://www.gov.uk/government/statistical-data-sets/price-paid-data-yearly-file
+https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads - Look for the current month file link
+
 Upon starting the program, the software will ask for which dataset will be used. Depending on the optionn, different prompts will be given.
 a - all data. looks for a file named pp-complete.csv.
 y - use a dataset from a specific year. It asks for the last 2 digits of the year.
