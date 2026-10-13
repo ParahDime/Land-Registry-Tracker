@@ -3,7 +3,8 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 from data_utils import load_data, sanitise, report_missing, assess_nulls
-from sql_utils import sql_average_price_per_property_type, sql_get_dates, sql_total_sales_county, sql_average_property_price, sql_get_established, sql_get_freehold_property, sql_get_leasehold_property, sql_get_lower_percentile, sql_get_max_property_price, sql_get_newbuild, sql_get_special_trans, sql_get_standard_trans, sql_get_upper_percentile, sql_max_price_per_property_type, sql_min_price_per_property_type, sql_mode_price_per_property, sql_mode_property_price, sql_num_per_X, sql_total_market_sales, sql_total_sales
+from sql_utils import sql_average_price_per_property_type, sql_get_dates, sql_total_sales_county, sql_average_property_price, sql_get_established, sql_get_freehold_property, sql_get_leasehold_property, sql_get_lower_percentile, sql_max_price_per_property_type, sql_get_newbuild, sql_get_special_trans, sql_get_standard_trans, sql_get_upper_percentile, sql_max_price_per_property_type, sql_min_price_per_property_type, sql_num_per_X, sql_total_market_sales, sql_total_sales
+from collections import defaultdict
 
 #name definitions for paths
 DB_FOLDER = Path("databases")
@@ -68,6 +69,7 @@ def test_foo():
 # CLEAN UP ANALYTICS, TOTAL, COUNTRY, COUNTY AMOUNTS
 #create a report
 def analytics(filePath, sql_db):
+    #enter where the reports go
     REPORT_FOLDER = Path("reports")
     REPORT_FOLDER.mkdir(parents=True, exist_ok=True)
     print("Analytics report")
@@ -83,16 +85,16 @@ def analytics(filePath, sql_db):
         path = path.with_name(f"{stem}_{counter}{suffix}")
         counter += 1
 
-    now = datetime.now()
-    report_datestamp = now.strftime("%Y-%m-%d")
-    report_timestamp = now.strftime("%H:%M:%S")  
+    money = lambda v: f"£{v:,.0f}"
+    now = datetime.now() 
 
     print("Processing...")
     with open(path, "w", encoding="utf-8") as f:
         f.write("Analytics Report" + "\n\n")
+        #BASICS in output
         f.write("Dataset used: " + filePath + ".csv\n\n")
-        f.write("Date: " + report_datestamp + "\n")
-        f.write("Time:" + report_timestamp + "\n")
+        f.write(f"Date: {now:%Y-%m-%d} \n")
+        f.write(f"Time: {now:%H:%M:%S}\n")
 
         with sqlite3.connect(DB_FILE) as engine:      
             f.write("Number of transations: " + str(sql_total_sales(engine)))
@@ -100,12 +102,14 @@ def analytics(filePath, sql_db):
             f.write("Start of dataset: {str(start)}\n")
             f.write("End date of dataset: {str(end)} \n\n")
 
+            f.write("Total price of houses sold: £" + str(sql_total_market_sales(engine)))           
+
             f.write("Property transactions by type: \n")
             property_breakdown = sql_num_per_X(engine)
             for property_name, count in property_breakdown:
                 f.write(f"{property_name}: {count} transactions \n\n")
 
-            f.write("Total price of houses sold: £" + str(sql_total_market_sales(engine)))
+            #COUNTRY STATS
             #get newbuild
             f.write("Total number of new build house sales: " + str(sql_get_newbuild(engine)))
             #get established
@@ -115,9 +119,42 @@ def analytics(filePath, sql_db):
             #repos and other
             f.write("Number of category B sales (land sales, reposessions, etc): " + str(sql_get_special_trans(engine)))
 
+            #COUNTY WIDE
+            # county-level lookups: county -> value
+        totals = {c: (n, t) for c, n, t in sql_total_sales_county(engine)}
+        avg = dict(sql_average_property_price(engine))
+        lease = dict(sql_get_leasehold_property(engine))
+        free = dict(sql_get_freehold_property(engine))
 
+        # per-type stats: stats[county][property_type][metric] = value
+        stats = defaultdict(lambda: defaultdict(dict))
+        metric_queries = {
+            "avg": sql_average_price_per_property_type,
+            "min": sql_min_price_per_property_type,
+            "max": sql_max_price_per_property_type,
+            "lower": sql_get_lower_percentile,
+            "upper": sql_get_upper_percentile,
+        }
+        for metric, query_fn in metric_queries.items():
+            for county, ptype, value in query_fn(engine):
+                stats[county][ptype][metric] = value
 
-            price_breakdown = sql_total_sales_county(engine)
+        f.write("\n=== COUNTIES ===\n")
+        for county in sorted(totals):  # alphabetical county order
+            count, total = totals[county]
+            f.write(f"\n{county}\n")
+            f.write(f"  Sales: {count:,} | Total: {money(total)} | Average: {money(avg.get(county, 0))}\n")
+            f.write(f"  Leasehold: {lease.get(county, 0):,} | Freehold: {free.get(county, 0):,}\n")
+            f.write("  By property type:\n")
+            for ptype, m in sorted(stats[county].items()):
+                # .get(..., 0) guards against any metric missing for a type
+                f.write(
+                    f"    - {ptype}: avg {money(m.get('avg', 0))} | "
+                    f"min {money(m.get('min', 0))} | max {money(m.get('max', 0))} | "
+                    f"LQ {money(m.get('lower', 0))} | UQ {money(m.get('upper', 0))}\n"
+                )
+
+            """price_breakdown = sql_total_sales_county(engine)
             for county, count, total_sales in price_breakdown:
                 f.write(f"{county}: {count:,} sales,  Total: £{total_sales:,.2f}\n")
             f.write("\n\n")
@@ -148,11 +185,11 @@ def analytics(filePath, sql_db):
             f.write("Lower percentile")
             low_percent = sql_get_lower_percentile(engine)
             #get leasehold property #COUNTY
-            f.write("Total number of leasehold properties sold: ")
+            f.write("Total number of leasehold properties sold: \n")
             leasehold = sql_get_leasehold_property(engine)
             #get freehold property #COUNTY
-            f.write("Total number of freehold properties sold: ")
-            freehold = sql_get_freehold_property(engine)
+            f.write("Total number of freehold properties sold: \n")
+            freehold = sql_get_freehold_property(engine)"""
             
    
     print("File creation complete. Exiting...")
@@ -199,6 +236,3 @@ def openingSequence():
 
 
 main()
-#names of column headers
-
-#null columns street or postcode - can be fields, orchards etc

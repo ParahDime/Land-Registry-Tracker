@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import sys
  
  #Load in the dataset
 def load_data(path: str) -> pd.DataFrame:
@@ -14,13 +15,14 @@ def load_data(path: str) -> pd.DataFrame:
     elif ext == ".json":
         return pd.read_json(path)
     else:
-        raise ValueError(f"Unsupported file type: {ext}")
+        errorMsg = ValueError(f"Unsupported file type: {ext}")
+        print(ValueError)
+        sys.exit()
  
  #clean the data
 def sanitise(df: pd.DataFrame) -> pd.DataFrame:
     """
     Basic, dataset-agnostic cleaning pass.
-    Extend this with dataset-specific rules (e.g. postcode format) later.
     """
     df = df.copy()
  
@@ -63,4 +65,4 @@ def assess_nulls(df: pd.DataFrame, nullable: set[str] = LAND_REGISTRY_NULLABLE) 
 
 #handle null values that need to be addressed
 def handle_nulls():
-    print("garmin")
+    print("hello world")

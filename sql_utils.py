@@ -138,7 +138,7 @@ def sql_min_price_per_property_type(engine) -> list[tuple]:
     return cursor.fetchall()
 
 #max value per property price
-def sql_max_price_per_property_type(engine) -> list[tuple]:
+def sql_max_price_per_property_type(engine) -> list[tuple]: 
         query = """
         SELECT 
             county,
@@ -256,6 +256,10 @@ def sql_get_freehold_property(engine) -> list[tuple]:
         GROUP BY county
         ORDER BY freehold_count DESC;
     """
+    cursor = engine.cursor()
+    cursor.execute(query)
+    return cursor.fetchall()
+
 #new build vs established
 def sql_get_newbuild(engine) -> int:
     query = """
